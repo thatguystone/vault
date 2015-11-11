@@ -105,6 +105,11 @@ format:
 		$(wildcard src/*.h)
 
 test: $(BIN_TEST)
+	@# There's a bug with llvm coverage that causes segfaults when forking
+	@# with coverage, but only on the first run, before the coverage files are
+	@# populated. So do a quick run with nothing rist, then run the actual tests.
+	@./$(BIN_TEST) -f __NONE__ > /dev/null
+
 	./$(BIN_TEST)
 	gcovr \
 		--root=src/ \
@@ -126,7 +131,7 @@ $(BIN_TEST): $(TOBJECTS)
 .PRECIOUS: %.to
 %.to: %.cpp | format
 	@echo '--- CXX $@'
-	@rm -f $<.gcda
+	@rm -f $*.gcda $*.gcno
 	@$(CXX) -c $(CXXFLAGS_TEST) -MF $*.td $< -o $@
 
 ifeq (,$(findstring clean,$(MAKECMDGOALS)))
