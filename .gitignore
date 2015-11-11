@@ -1,0 +1,10 @@
+*.a
+*.d
+*.td
+*.gc*
+*.o
+*.to
+test_data/
+
+vault
+vault.test
