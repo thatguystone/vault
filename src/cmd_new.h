@@ -8,8 +8,6 @@
 
 class NewCmd : public Cmd
 {
-	Error createFile(const std::string &path, off_t len);
-
 public:
 	std::string name() const;
 	std::string desc() const;

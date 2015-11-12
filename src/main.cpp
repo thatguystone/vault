@@ -3,7 +3,7 @@
  * @license MIT
  */
 
-#include "vault.h"
+#include "cmd.h"
 
 int main(int argc, char **argv)
 {
@@ -14,5 +14,15 @@ int main(int argc, char **argv)
 		args[i] = argv[i];
 	}
 
-	return vault(std::move(args));
+	try {
+		auto err = cmd(std::move(args));
+		if (!err.ok()) {
+			throw err;
+		}
+	} catch (Error e) {
+		printf("Error: %s\n", err.msg_.c_str());
+		return 1;
+	}
+
+	return 0;
 }

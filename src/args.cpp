@@ -37,3 +37,8 @@ void ArgsOut::usage(TCLAP::CmdLineInterface &cmd)
 
 	this->printExtras();
 }
+
+NewCredentials NewCredentialsArgs::asNewCredentials()
+{
+	return NewCredentials();
+}

@@ -19,3 +19,8 @@ public:
 	virtual std::string desc() const = 0;
 	virtual Error run(std::vector<std::string> argv) = 0;
 };
+
+/**
+ * Run from any set of arbitrary arguments
+ */
+Error cmd(std::vector<std::string> argv);

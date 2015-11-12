@@ -4,7 +4,9 @@
  */
 
 #include <paratec.h>
+#include "vault.h"
 
 PARATEC(basic)
 {
+	Vault("basic.vlt", Credentials());
 }

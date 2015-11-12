@@ -8,6 +8,7 @@
 #include <tclap/CmdLine.h>
 #include "std.h"
 #include "util.h"
+#include "vault.h"
 
 class ArgsOut : public TCLAP::StdOutput
 {
@@ -44,12 +45,12 @@ public:
 	}
 };
 
-struct CredentialArgs {
-	TCLAP::ValueArg<std::string> password_;
-
-	CredentialArgs(Args *args)
-		: password_("p",
-					"password",
+class CredentialsArgs
+{
+protected:
+	CredentialsArgs(Args *args, bool change)
+		: password_("",
+					change ? "new-password" : "password",
 					"Password to use. This should only be used for testing "
 					"since it is rather insecure.",
 					false,
@@ -58,6 +59,23 @@ struct CredentialArgs {
 	{
 		args->add(this->password_);
 	}
+
+public:
+	TCLAP::ValueArg<std::string> password_;
+
+	CredentialsArgs(Args *args) : CredentialsArgs(args, false)
+	{
+	}
+
+	Credentials asCredentials();
+};
+
+struct NewCredentialsArgs : CredentialsArgs {
+	NewCredentialsArgs(Args *args, bool change) : CredentialsArgs(args, change)
+	{
+	}
+
+	NewCredentials asNewCredentials();
 };
 
 struct _SizeArg {
@@ -80,12 +98,11 @@ template <> struct TCLAP::ArgTraits<_SizeArg> {
 	typedef TCLAP::ValueLike ValueCategory;
 };
 
-struct SizeArg : public TCLAP::ValueArg<_SizeArg> {
+struct SizeArg : public TCLAP::UnlabeledValueArg<_SizeArg> {
 	uint64_t bytes_;
 
 	SizeArg(Args *args)
-		: TCLAP::ValueArg<_SizeArg>(
-			  "s",
+		: TCLAP::UnlabeledValueArg<_SizeArg>(
 			  "size",
 			  "Size of vault. Values may either be numbers (for number "
 			  "of bytes), or human-readable strings like \"15M\", "

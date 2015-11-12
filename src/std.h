@@ -14,10 +14,14 @@
 
 #define __STR(s) #s
 #define STR(s) __STR(s)
-
 #define NELS(a) (sizeof(a) / sizeof((a)[0]))
-
+#define LIKELY(cond) (__builtin_expect(!!(cond), 1))
+#define UNLIKELY(cond) (__builtin_expect(!!(cond), 0))
 #define PRINTF(f, a) __attribute__((__format__(__printf__, f, a)))
+#define CHECK_C_ALLOC(val)                                                     \
+	if (UNLIKELY((val) == NULL)) {                                             \
+		throw std::bad_alloc();                                                \
+	}
 
 template <typename T> using sp = std::shared_ptr<T>;
 template <typename T> using up = std::unique_ptr<T>;
