@@ -41,7 +41,7 @@ CXXFLAGS = \
 	-fstack-protector \
 	--param=ssp-buffer-size=4 \
 	-D_FORTIFY_SOURCE=2 \
-	-std=gnu++11 \
+	-std=gnu++14 \
 	-march=native \
 	-mfpmath=sse \
 	-msse \
@@ -97,7 +97,7 @@ clean:
 	@rm -f $(TOBJECTS:.to=.td)
 	@rm -f $(OBJECTS:.o=.gcno)
 	@rm -f $(OBJECTS:.o=.gcda)
-	@rm -rf test_data/*
+	@sudo rm -rf test_data/
 
 format:
 	@$(CLANG_FORMAT) -i \
@@ -110,7 +110,7 @@ test: $(BIN_TEST)
 	@# populated. So do a quick run with nothing rist, then run the actual tests.
 	@./$(BIN_TEST) -f __NONE__ > /dev/null
 
-	./$(BIN_TEST)
+	sudo -E ./$(BIN_TEST)
 	gcovr \
 		--root=src/ \
 		--exclude=.*_test.*

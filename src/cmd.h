@@ -8,6 +8,11 @@
 #include "std.h"
 #include "vault.h"
 
+namespace vault
+{
+namespace cmd
+{
+
 class Cmd
 {
 public:
@@ -17,10 +22,12 @@ public:
 
 	virtual std::string name() const = 0;
 	virtual std::string desc() const = 0;
-	virtual Error run(std::vector<std::string> argv) = 0;
+	virtual void run(std::vector<std::string> argv) = 0;
 };
 
 /**
  * Run from any set of arbitrary arguments
  */
-Error cmd(std::vector<std::string> argv);
+void cmd(std::vector<std::string> argv);
+}
+}

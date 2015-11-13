@@ -6,31 +6,38 @@
 #include "args.h"
 #include "cmd_new.h"
 
-std::string NewCmd::name() const
+namespace vault
+{
+namespace cmd
+{
+
+std::string New::name() const
 {
 	return "new";
 }
 
-std::string NewCmd::desc() const
+std::string New::desc() const
 {
 	return "create a new vault";
 }
 
-Error NewCmd::run(std::vector<std::string> argv)
+void New::run(std::vector<std::string>)
 {
-	Error err;
-	Args args;
+	// Error err;
+	// Args args;
 
-	NewCredentialsArgs cred(&args, false);
-	TCLAP::SwitchArg randomize("r", "randomize", "Randomize the file", args,
-							   true);
-	FileArg file(&args);
-	SizeArg size(&args);
+	// NewCredentialsArgs cred(&args, false);
+	// TCLAP::SwitchArg randomize("r", "randomize", "Randomize the file", args,
+	// 						   true);
+	// FileArg file(&args);
+	// SizeArg size(&args);
 
-	args.parse(argv);
+	// args.parse(argv);
 
-	Vault v(file.getValue(), Credentials());
+	// Vault v(file.getValue(), Credentials());
 
-	return v.create(size.getValue().bytes_, cred.asNewCredentials(),
-					randomize.getValue());
+	// return v.create(size.getValue().bytes_, cred.asNewCredentials(),
+	// 				randomize.getValue());
+}
+}
 }

@@ -6,10 +6,17 @@
 #pragma once
 #include "cmd.h"
 
-class NewCmd : public Cmd
+namespace vault
+{
+namespace cmd
+{
+
+class New : public Cmd
 {
 public:
 	std::string name() const;
 	std::string desc() const;
-	Error run(std::vector<std::string> args);
+	void run(std::vector<std::string> args);
 };
+}
+}

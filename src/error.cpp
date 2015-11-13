@@ -5,48 +5,47 @@
 
 #include "error.h"
 
-Error::Error(int err, const char *format, ...) noexcept
+namespace vault
 {
-	va_list args;
-	va_start(args, format);
-	this->vset(err, format, args);
-	va_end(args);
+
+#define CHECK()                                                                \
+	if (err >= 0) {                                                            \
+		return;                                                                \
+	}                                                                          \
+	va_list args;                                                              \
+	char buff[8192];                                                           \
+	va_start(args, format);                                                    \
+	vsnprintf(buff, sizeof(buff), format, args);                               \
+	va_end(args);                                                              \
+	this->err_ = err;                                                          \
+	this->msg_ = buff;                                                         \
+	if (extra != nullptr) {                                                    \
+		this->msg_.append(": ");                                               \
+		this->msg_.append(extra);                                              \
+	}                                                                          \
+	throw * this;
+
+Error::Error(int err, const char *format, ...)
+{
+	const char *extra = nullptr;
+	CHECK();
 }
 
-void Error::set(int err, const char *format, ...) noexcept
+OSError::OSError(int err, const char *format, ...)
 {
-	va_list args;
-	va_start(args, format);
-	this->vset(err, format, args);
-	va_end(args);
-}
-
-void Error::vset(int err, const char *format, va_list args) noexcept
-{
-	if (err >= 0) {
-		return;
+	const char *extra = nullptr;
+	if (err < 0) {
+		extra = strerror(errno);
+		err = -errno;
 	}
 
-	this->err_ = err;
-
-	char buff[8192];
-	vsnprintf(buff, sizeof(buff), format, args);
-	this->msg_ = buff;
+	CHECK();
 }
 
-OSError::OSError(int err, const char *format, ...) noexcept
+Assert::Assert(bool a, const char *format, ...)
 {
-	if (err >= 0) {
-		this->err_ = err;
-	} else {
-		err = errno;
-
-		va_list args;
-		va_start(args, format);
-		this->vset(-err, format, args);
-		va_end(args);
-
-		this->msg_.append(": ");
-		this->msg_.append(strerror(err));
-	}
+	int err = a ? 0 : -1;
+	const char *extra = nullptr;
+	CHECK();
+}
 }

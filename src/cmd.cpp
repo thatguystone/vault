@@ -13,13 +13,18 @@
 #include "std.h"
 #include "vault.h"
 
+namespace vault
+{
+namespace cmd
+{
+
 static up<Cmd> _cmds[] = {
-	std::make_unique<CloseCmd>(),  std::make_unique<NewCmd>(),
-	std::make_unique<OpenCmd>(),   std::make_unique<ResizeCmd>(),
-	std::make_unique<VerifyCmd>(),
+	std::make_unique<Close>(),  std::make_unique<New>(),
+	std::make_unique<Open>(),   std::make_unique<Resize>(),
+	std::make_unique<Verify>(),
 };
 
-class Usage : public ArgsOut
+class Usage : public args::StdOutput
 {
 protected:
 	virtual std::string extraUsage()
@@ -48,12 +53,12 @@ public:
 		}
 
 		while (true) {
-			Args(this).parse(argv);
+			args::Args(this).parse(argv);
 		}
 	}
 };
 
-Error cmd(std::vector<std::string> argv)
+void cmd(std::vector<std::string> argv)
 {
 	if (argv.size() > 1) {
 		for (auto &cmd : _cmds) {
@@ -61,7 +66,8 @@ Error cmd(std::vector<std::string> argv)
 				argv[0] += " " + argv[1];
 				argv.erase(++argv.begin());
 
-				return cmd->run(std::move(argv));
+				cmd->run(std::move(argv));
+				return;
 			}
 		}
 	}
@@ -71,4 +77,6 @@ Error cmd(std::vector<std::string> argv)
 	}
 
 	Usage().showHelp(std::move(argv));
+}
+}
 }

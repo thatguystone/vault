@@ -10,9 +10,14 @@
 #include "util.h"
 #include "vault.h"
 
-class ArgsOut : public TCLAP::StdOutput
+namespace vault
 {
-	static ArgsOut self_;
+namespace args
+{
+
+class StdOutput : public ::TCLAP::StdOutput
+{
+	static StdOutput self_;
 
 protected:
 	static std::string trim(std::string str);
@@ -27,28 +32,28 @@ protected:
 	}
 
 public:
-	virtual void usage(TCLAP::CmdLineInterface &cmd);
+	virtual void usage(::TCLAP::CmdLineInterface &cmd);
 };
 
-class Args : public TCLAP::CmdLine
+class Args : public ::TCLAP::CmdLine
 {
-	static ArgsOut default_out_;
+	static StdOutput default_out_;
 
 public:
 	Args() : Args(&Args::default_out_)
 	{
 	}
 
-	Args(TCLAP::CmdLineOutput *out) : TCLAP::CmdLine("", ' ', VERSION)
+	Args(::TCLAP::CmdLineOutput *out) : ::TCLAP::CmdLine("", ' ', VERSION)
 	{
 		this->setOutput(out);
 	}
 };
 
-class CredentialsArgs
+class Creds
 {
 protected:
-	CredentialsArgs(Args *args, bool change)
+	Creds(Args *args, bool change)
 		: password_("",
 					change ? "new-password" : "password",
 					"Password to use. This should only be used for testing "
@@ -61,68 +66,70 @@ protected:
 	}
 
 public:
-	TCLAP::ValueArg<std::string> password_;
+	::TCLAP::ValueArg<std::string> password_;
 
-	CredentialsArgs(Args *args) : CredentialsArgs(args, false)
+	Creds(Args *args) : Creds(args, false)
 	{
 	}
 
-	Credentials asCredentials();
+	::vault::crypt::Creds asCreds();
 };
 
-struct NewCredentialsArgs : CredentialsArgs {
-	NewCredentialsArgs(Args *args, bool change) : CredentialsArgs(args, change)
+struct NewCreds : Creds {
+	NewCreds(Args *args, bool change) : Creds(args, change)
 	{
 	}
 
-	NewCredentials asNewCredentials();
+	::vault::crypt::NewCreds asNewCreds();
 };
 
-struct _SizeArg {
+struct _Size {
 	off_t bytes_ = 0;
 
-	friend std::istream &operator>>(std::istream &input, _SizeArg &sa)
+	friend std::istream &operator>>(std::istream &input, _Size &sa)
 	{
 		std::string s;
 		input >> s;
 
-		if (!humanReadableBytes(s, &sa.bytes_)) {
-			throw TCLAP::ArgParseException("Failed to read size arg: " + s);
+		if (!util::humanReadableBytes(s, &sa.bytes_)) {
+			throw ::TCLAP::ArgParseException("Failed to read size arg: " + s);
 		}
 
 		return input;
 	}
 };
 
-template <> struct TCLAP::ArgTraits<_SizeArg> {
-	typedef TCLAP::ValueLike ValueCategory;
-};
-
-struct SizeArg : public TCLAP::UnlabeledValueArg<_SizeArg> {
+struct Size : public ::TCLAP::UnlabeledValueArg<_Size> {
 	uint64_t bytes_;
 
-	SizeArg(Args *args)
-		: TCLAP::UnlabeledValueArg<_SizeArg>(
+	Size(Args *args)
+		: ::TCLAP::UnlabeledValueArg<_Size>(
 			  "size",
 			  "Size of vault. Values may either be numbers (for number "
 			  "of bytes), or human-readable strings like \"15M\", "
 			  "\"1G\", etc.",
 			  true,
-			  _SizeArg(),
+			  _Size(),
 			  "size",
 			  *args)
 	{
 	}
 };
 
-struct FileArg : public TCLAP::UnlabeledValueArg<std::string> {
-	FileArg(Args *args)
-		: TCLAP::UnlabeledValueArg<std::string>("file",
-												"vault file to use",
-												true,
-												"vault.vlt",
-												"FILE.vlt",
-												*args)
+struct File : public ::TCLAP::UnlabeledValueArg<std::string> {
+	File(Args *args)
+		: ::TCLAP::UnlabeledValueArg<std::string>("file",
+												  "vault file to use",
+												  true,
+												  "vault.vlt",
+												  "FILE.vlt",
+												  *args)
 	{
 	}
+};
+}
+}
+
+template <> struct TCLAP::ArgTraits<vault::args::_Size> {
+	typedef ::TCLAP::ValueLike ValueCategory;
 };

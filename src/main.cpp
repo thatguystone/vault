@@ -15,12 +15,12 @@ int main(int argc, char **argv)
 	}
 
 	try {
-		auto err = cmd(std::move(args));
+		auto err = vault::cmd(std::move(args));
 		if (!err.ok()) {
 			throw err;
 		}
 	} catch (Error e) {
-		printf("Error: %s\n", err.msg_.c_str());
+		fprintf(stderr, "Error: %s\n", err.msg_.c_str());
 		return 1;
 	}
 

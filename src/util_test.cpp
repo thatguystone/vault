@@ -3,9 +3,14 @@
  * @license MIT
  */
 
-#include <paratec.h>
 #include <string>
 #include "util.h"
+#include "test_test.h"
+
+namespace vault
+{
+namespace util
+{
 
 static struct {
 	std::string in;
@@ -65,7 +70,7 @@ static struct {
 	},
 };
 
-PARATECV(utilHumanReadableBytes, _humanReadableTests)
+VLTESTV(utilHumanReadableBytes, _humanReadableTests)
 {
 	pt_set_iter_name("%s", _t->in.c_str());
 
@@ -76,4 +81,6 @@ PARATECV(utilHumanReadableBytes, _humanReadableTests)
 	if (ok) {
 		pt_ueq(_t->out, res);
 	}
+}
+}
 }

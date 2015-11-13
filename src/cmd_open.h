@@ -6,7 +6,12 @@
 #pragma once
 #include "cmd.h"
 
-class OpenCmd : public Cmd
+namespace vault
+{
+namespace cmd
+{
+
+class Open : public Cmd
 {
 public:
 	std::string name() const
@@ -19,8 +24,9 @@ public:
 		return "open an existing vault";
 	}
 
-	Error run(std::vector<std::string>)
+	void run(std::vector<std::string>)
 	{
-		return Error();
 	}
 };
+}
+}

@@ -8,6 +8,9 @@
 #include "error.h"
 #include "std.h"
 
+namespace vault
+{
+
 /**
  * Adapted from libcrypsetup's safe_alloc functions.
  */
@@ -47,6 +50,24 @@ public:
 		this->resize(size);
 	}
 
+	/**
+	 * Don't make copies. The more copies, the higher the chances of doing
+	 * something wrong.
+	 */
+	Safe(const Safe &) = delete;
+
+	/**
+	 * Moving is fine. Still only 1 copy around.
+	 */
+	Safe(Safe &&o)
+	{
+		this->c_ = o.c_;
+		this->m_ = o.m_;
+
+		o.c_ = 0;
+		o.m_ = nullptr;
+	}
+
 	~Safe()
 	{
 		this->dispose(this->m_, this->c_);
@@ -65,3 +86,4 @@ public:
 		this->c_ = c;
 	}
 };
+}

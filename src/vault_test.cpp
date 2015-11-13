@@ -3,10 +3,17 @@
  * @license MIT
  */
 
-#include <paratec.h>
-#include "vault.h"
+#include "test_test.h"
+#include "vault_test.h"
 
-PARATEC(basic)
+namespace vault
 {
-	Vault("basic.vlt", Credentials());
+
+VLTEST(vaultCreate)
+{
+	Vault v(test::file("vault.vlt"));
+
+	v.create(test::file("vault"), test::bytes("1m"),
+			 std::make_unique<crypt::NewCreds>());
+}
 }

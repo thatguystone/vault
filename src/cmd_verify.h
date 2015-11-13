@@ -6,7 +6,12 @@
 #pragma once
 #include "cmd.h"
 
-class VerifyCmd : public Cmd
+namespace vault
+{
+namespace cmd
+{
+
+class Verify : public Cmd
 {
 public:
 	std::string name() const
@@ -19,8 +24,9 @@ public:
 		return "verify vault integrity";
 	}
 
-	Error run(std::vector<std::string>)
+	void run(std::vector<std::string>)
 	{
-		return Error();
 	}
 };
+}
+}

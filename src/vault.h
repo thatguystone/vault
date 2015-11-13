@@ -6,58 +6,37 @@
 #pragma once
 #include <string>
 #include <vector>
+#include "crypt.h"
 #include "error.h"
-#include "safe.h"
 
-class Credentials
+namespace vault
 {
-protected:
-	Safe password_;
-
-	/**
-	 * How long to iterate on PBKDF2 function.
-	 */
-	uint64_t iteration_ms = 1000;
-
-public:
-	/**
-	 * Request credentials from the user as necessary
-	 */
-	Credentials() = default;
-};
-
-class NewCredentials : Credentials
-{
-
-public:
-	/**
-	 * Request and verify credentials from the user as necessary.
-	 */
-	NewCredentials() = default;
-};
 
 class Vault
 {
+	/**
+	 * Path to vault file
+	 */
 	std::string path_;
-	Credentials creds_;
-
-	Error truncate(off_t size, bool randomize);
 
 public:
-	Vault(std::string path, Credentials creds)
-		: path_(std::move(path)), creds_(std::move(creds))
+	Vault(std::string path) : path_(std::move(path))
 	{
 	}
 
 	/**
 	 * Create a new vault of the given size.
 	 *
+	 * @param mount_dir
+	 *     Where to mount the newly created vault to
 	 * @param size
 	 *     How large the vault should be, in bytes
-	 * @param creds
-	 *     Credentials to use to authorize with the vault.
+	 * @param new_creds
+	 *     New credentials to use to setup the vault.
 	 * @param randomize
 	 *     If the newly-created file should be completely randomized.
+	 * @param fs
+	 *     Which filesystem to use.
 	 * @param cipher_mode
 	 *     Cipher mode to create vault with. Can be any mode supported by
 	 *     cryptsetup, for example (as of late 2015): either "xts-plain64" or
@@ -65,12 +44,15 @@ public:
 	 * @param hash
 	 *     Which hash function to use for PBKDF2.
 	 */
-	Error create(off_t size,
-				 NewCredentials creds,
-				 bool randomize = true,
-				 const std::string &cipher_mode = "xts-plain64",
-				 const std::string &hash = "sha1");
+	void create(std::string mount_dir,
+				off_t size,
+				sp<crypt::NewCreds> new_creds,
+				bool randomize = true,
+				const std::string &fs = "ext4",
+				const std::string &cipher_mode = "xts-plain64",
+				const std::string &hash = "sha1");
 
-	Error open();
-	Error close();
+	void open();
+	void close();
 };
+}

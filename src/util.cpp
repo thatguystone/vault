@@ -5,7 +5,12 @@
 
 #include "util.h"
 
-bool humanReadableBytes(std::string &s, off_t *res)
+namespace vault
+{
+namespace util
+{
+
+bool humanReadableBytes(const std::string &s, off_t *res)
 {
 	int shift;
 	char *endp;
@@ -54,4 +59,6 @@ bool humanReadableBytes(std::string &s, off_t *res)
 	*res = num << shift;
 
 	return true;
+}
+}
 }

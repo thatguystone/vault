@@ -6,15 +6,20 @@
 #include "args.h"
 #include <boost/algorithm/string.hpp>
 
-ArgsOut Args::default_out_;
+namespace vault
+{
+namespace args
+{
 
-std::string ArgsOut::trim(std::string str)
+StdOutput Args::default_out_;
+
+std::string StdOutput::trim(std::string str)
 {
 	boost::trim_right(str);
 	return std::move(str);
 }
 
-void ArgsOut::usage(TCLAP::CmdLineInterface &cmd)
+void StdOutput::usage(TCLAP::CmdLineInterface &cmd)
 {
 	{
 		printf("Usage:\n");
@@ -38,7 +43,9 @@ void ArgsOut::usage(TCLAP::CmdLineInterface &cmd)
 	this->printExtras();
 }
 
-NewCredentials NewCredentialsArgs::asNewCredentials()
+::vault::crypt::NewCreds NewCreds::asNewCreds()
 {
-	return NewCredentials();
+	return ::vault::crypt::NewCreds();
+}
+}
 }
