@@ -19,6 +19,8 @@ class Dev
 	std::string dev_;
 
 public:
+	Dev() = default;
+
 	Dev(std::string dev) : dev_(std::move(dev))
 	{
 	}
@@ -34,6 +36,8 @@ public:
  */
 class LoMountOp : public Transaction::Op
 {
+	Dev dev_;
+
 public:
 	Dev run(const std::string &path);
 

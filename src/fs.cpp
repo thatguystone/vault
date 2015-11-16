@@ -3,6 +3,7 @@
  * @license MIT
  */
 
+#include "exec.h"
 #include "fs.h"
 
 namespace vault
@@ -10,9 +11,13 @@ namespace vault
 namespace fs
 {
 
-Dev LoMountOp::run(const std::string &)
+Dev LoMountOp::run(const std::string &path)
 {
-	return Dev("");
+	auto out = exec("losetup", { "--show", "-f", path });
+
+	this->dev_ = Dev(out);
+
+	return this->dev_;
 }
 
 void LoMountOp::undo() noexcept

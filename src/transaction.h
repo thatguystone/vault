@@ -6,6 +6,7 @@
 #pragma once
 #include <vector>
 #include <type_traits>
+#include "error.h"
 #include "std.h"
 
 namespace vault
@@ -36,20 +37,25 @@ public:
 	~Transaction();
 
 	/**
-	 * Add something that can be rolled back
+	 * Add something that can be rolled back. If the operation fails,
+	 * the operation's corresponding undo() function will not be called.
 	 */
 	template <typename T, typename... Args> auto run(Args &&... args)
 	{
 		auto op = std::make_unique<T>();
-		auto p = op.get();
-
 		this->ops_.push_back(std::move(op));
 
-		return p->run(std::forward<Args>(args)...);
+		try {
+			return op->run(std::forward<Args>(args)...);
+		} catch (Error e) {
+			// I'm not a fan of this block, but I'm not sure what else to do
+			this->ops_.pop_back();
+			throw e;
+		}
 	}
 
 	/**
-	 * Run the series
+	 * Mark the series as "ok"
 	 */
 	void commit();
 };

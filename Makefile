@@ -113,7 +113,8 @@ test: $(BIN_TEST)
 	sudo -E ./$(BIN_TEST)
 	gcovr \
 		--root=src/ \
-		--exclude=.*_test.*
+		--exclude=.*_test.* \
+		--exclude=exec.cpp
 
 $(BIN): $(BOBJECTS)
 	@echo '--- LD $@'
