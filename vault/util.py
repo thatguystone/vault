@@ -19,12 +19,13 @@ for i, s in enumerate(_suffixes):
 		s[1] = _suffixes[i-1][1] * 1024
 
 def human_size(size):
-	size = size.lower()
-	for s in _suffixes:
-		for e in s[0]:
-			if size.endswith(e):
-				size = size[:-len(e)]
-				return abs(int(size)) * s[1]
+	if isinstance(size, str):
+		size = size.lower()
+		for s in _suffixes:
+			for e in s[0]:
+				if size.endswith(e):
+					size = size[:-len(e)]
+					return abs(int(size)) * s[1]
 
 	return int(size)
 

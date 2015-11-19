@@ -27,7 +27,7 @@ class Resize(object):
 				_grow(f, self.size, self.randomize)
 			else:
 				# `size` is negative, so add
-				total = os.path.getsize(self.file) + size
+				total = os.path.getsize(self.file) + self.size
 				f.truncate(total)
 
 	def undo(self):

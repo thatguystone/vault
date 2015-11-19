@@ -69,12 +69,7 @@ class Open(object):
 
 		util.run(*args, stdin=self.password)
 
-		# Wait for changes to be visible
-		name = mapper(self.name)
-		while not os.path.exists(name):
-			time.sleep(.1)
-
-		return name
+		return mapper(self.name)
 
 	def undo(self):
 		_close(self.name)
@@ -110,7 +105,3 @@ def _close(name):
 	util.run(
 		"cryptsetup",
 		"close", name)
-
-	# Wait for changes to be visible
-	while os.path.exists(mapper(name)):
-		time.sleep(.1)

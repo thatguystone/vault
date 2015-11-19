@@ -6,7 +6,7 @@ import os.path
 import sys
 import time
 
-from . import crypt, file, fs, loopdev
+from . import crypt, file, fs, loopdev, util
 
 log = logging.getLogger(__name__)
 
@@ -74,9 +74,9 @@ class Vault(object):
 			t.add(fs.Mount(cryptdev, mount_dir))
 
 	def close(self, quiet=False):
-		noexcept(fs.Unmount(self.vault), quiet)
-		noexcept(crypt.Close(self.vault), quiet)
-		noexcept(loopdev.Close(self.vault), quiet)
+		noexcept(fs.Unmount(self.vault))
+		noexcept(crypt.Close(self.vault))
+		noexcept(loopdev.Close(self.vault))
 
 	def is_mounted(self):
 		opened = False
@@ -117,13 +117,13 @@ class Vault(object):
 				cryptdev = t.add(crypt.Open(self.vault, lodev, password))
 
 			curr_size = fs.size(cryptdev)
-			size = curr_size - human_size(how_much)
+			size = curr_size - util.human_size(how_much)
 			if size < 0:
 				raise AssertionError("cannot shrink more than total size: {} > {}".format(
-					human_size(how_much),
+					util.human_size(how_much),
 					curr_size))
 
-			actual_resize = t.add(file.Resize(self.vault, size))
+			actual_resize = t.add(fs.Resize(cryptdev, size))
 
 			self.close(quiet=True)
 			t.add(file.Resize(self.vault, -(curr_size - actual_resize)))
@@ -160,9 +160,8 @@ class Transaction(object):
 		self._undos.insert(0, op)
 		return ret
 
-def noexcept(r, quiet=False):
+def noexcept(r):
 	try:
 		r.run()
 	except Exception as e:
-		if not quiet:
-			log.warn("%s failed: %s", r.__class__.__name__, e)
+		log.warn("%s failed: %s", r.__class__.__name__, e)

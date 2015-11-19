@@ -7,7 +7,7 @@ import random
 import shutil
 import unittest
 
-from . import crypt, fs, loopdev, util, vault
+from .. import crypt, fs, loopdev, util, vault
 
 class TestVault(unittest.TestCase):
 	_multiprocess_can_split_ = True
@@ -22,9 +22,9 @@ class TestVault(unittest.TestCase):
 
 	def setUp(self):
 		# Cleanup after any failures from previous runs
-		vault.noexcept(fs.Unmount(self.path()), True)
-		vault.noexcept(crypt.Close(self.path()), True)
-		vault.noexcept(loopdev.Close(self.path()), True)
+		vault.noexcept(fs.Unmount(self.path()))
+		vault.noexcept(crypt.Close(self.path()))
+		vault.noexcept(loopdev.Close(self.path()))
 
 		shutil.rmtree(self.dir())
 		self.v = vault.Vault(self.path())
@@ -57,8 +57,8 @@ class TestBasic(TestVault):
 		self.create()
 		self.v.close()
 
-class TestGrow(TestVault):
-	def _grow(self, how_much, close=False):
+class TestResize(TestVault):
+	def _resize(self, how_much, fn, close=False):
 		rand = "{}".format(random.random())
 		path = os.path.join(self.mount(), "test_file")
 
@@ -68,12 +68,16 @@ class TestGrow(TestVault):
 		if close:
 			self.v.close()
 
-		self.v.grow(how_much, password=self.PASS)
+		fn(how_much, password=self.PASS)
 		self.v.close()
 		self.v.open(self.mount(), password=self.PASS)
 
 		with open(path, "r") as f:
 			assert_equal(rand, f.read())
+
+class TestGrow(TestResize):
+	def _grow(self, how_much, close=False):
+		self._resize(how_much, self.v.grow, close)
 
 	def test_closed(self):
 		self.create()
@@ -82,3 +86,15 @@ class TestGrow(TestVault):
 	def test_open(self):
 		self.create()
 		self._grow("10m")
+
+class TestShrink(TestResize):
+	def _shrink(self, how_much, close=False):
+		self._resize(how_much, self.v.shrink, close)
+
+	def test_closed(self):
+		self.create()
+		self._shrink("1m", close=True)
+
+	def test_open(self):
+		self.create()
+		self._shrink("1m")
