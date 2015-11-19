@@ -1,6 +1,7 @@
 import logging
 import sys
 import subprocess
+import time
 
 _suffixes = [
 	[("k", "kb"), 0],
@@ -23,7 +24,7 @@ def human_size(size):
 		for e in s[0]:
 			if size.endswith(e):
 				size = size[:-len(e)]
-				return int(size) * s[1]
+				return abs(int(size)) * s[1]
 
 	return int(size)
 
@@ -35,25 +36,23 @@ def to_bytes(obj):
 def _proc_name(args):
 	if len(args) == 0:
 		return "<unknown>"
-
-	if len(args) >1 and args[0] == "sudo":
-		return args[1]
-
 	return args[0]
 
 def run(*args, stdin=None):
-	log.debug("exec: %s", args)
-
-	p = subprocess.Popen(args,
-		stdin=sys.stdin if not stdin else subprocess.PIPE,
-		stdout=subprocess.PIPE,
-		stderr=subprocess.STDOUT,
-		close_fds=True)
-	out = p.communicate(input=to_bytes(stdin))[0].decode("utf-8")
+	start = time.monotonic()
+	try:
+		p = subprocess.Popen(args,
+			stdin=sys.stdin if not stdin else subprocess.PIPE,
+			stdout=subprocess.PIPE,
+			stderr=subprocess.STDOUT,
+			close_fds=True)
+		out = p.communicate(input=to_bytes(stdin))[0].decode("utf-8")
+	finally:
+		log.debug("exec (took %fs): %s", time.monotonic() - start, args)
 
 	if p.returncode != 0:
 		raise RuntimeError("failed to execute {proc}, process said: {out}".format(
 			proc=_proc_name(args),
-			out=out))
+			out=out.strip()))
 
 	return out

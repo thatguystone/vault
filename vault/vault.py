@@ -4,8 +4,9 @@ import argparse
 import logging
 import os.path
 import sys
+import time
 
-from . import crypt, file, loopdev, mount
+from . import crypt, file, fs, loopdev
 
 log = logging.getLogger(__name__)
 
@@ -14,7 +15,7 @@ class Vault(object):
 		self.vault = vault
 
 	def create(self, mount_dir, size,
-		randomize=True,	fs="ext4",
+		randomize=True,	fs_type="ext4",
 		cipher_mode="xts-plain64",
 		hash=None, kdf_iter_time_ms=None,
 		use_urandom=False,
@@ -32,7 +33,7 @@ class Vault(object):
 		:param fs: Which filesystem to put into the vault
 
 		:param cipher_mode: Cipher mode to pass through to cryptsetup.
-		    Currently (as of late 2015), only cbc-essiv:<sha1,sha256,sha512>
+		    Currently (as of late 2015), only cbc-essiv:<sha256,sha512>
 		    and xts-plain64 are supported.
 
 		:param hash: Which hash to use for cryptsetup's PBKDF2 function. sha1
@@ -50,7 +51,6 @@ class Vault(object):
 
 		with Transaction() as t:
 			t.add(file.Create(self.vault, size, randomize))
-			t.add(file.Randomize(self.vault, size, randomize))
 			lodev = t.add(loopdev.Open(self.vault))
 
 			t.add(crypt.Format(
@@ -61,8 +61,8 @@ class Vault(object):
 
 			cryptdev = t.add(crypt.Open(self.vault, lodev, password))
 
-			t.add(mount.Format(fs, cryptdev))
-			t.add(mount.Open(cryptdev, mount_dir))
+			t.add(fs.Format(fs_type, cryptdev))
+			t.add(fs.Mount(cryptdev, mount_dir))
 
 	def open(self, mount_dir, password=None):
 		if self.is_mounted():
@@ -71,59 +71,72 @@ class Vault(object):
 		with Transaction() as t:
 			lodev = t.add(loopdev.Open(self.vault))
 			cryptdev = t.add(crypt.Open(self.vault, lodev, password))
-			t.add(mount.Open(cryptdev, mount_dir))
+			t.add(fs.Mount(cryptdev, mount_dir))
 
-	def close(self):
-		noexcept(mount.Close(self.vault))
-		noexcept(crypt.Close(self.vault))
-		noexcept(loopdev.Close(self.vault))
+	def close(self, quiet=False):
+		noexcept(fs.Unmount(self.vault), quiet)
+		noexcept(crypt.Close(self.vault), quiet)
+		noexcept(loopdev.Close(self.vault), quiet)
 
 	def is_mounted(self):
 		opened = False
 
 		dev = loopdev.find(self.vault)
 		if dev:
-			opened = crypt.is_luks(dev) and mount.is_mounted(self.vault)
+			opened = crypt.is_luks(dev) and fs.is_mounted(self.vault)
 
 		return opened
 
-	def grow(self, mount_dir, how_much, randomize=True, password=None):
-		pass
+	def grow(self, how_much, randomize=True, password=None):
+		# 0) close everything
+		# 1) resize file
+		# 2) open without mounting
+		# 3) resize FS
+		# 4) close everything again so that next open works right
 
-	def shrink(self, mount_dir, how_much, password=None):
-		pass
+		self.close(quiet=True)
 
-		# size = util.human_size(size)
-		# curr_size = self._size()
+		with Transaction() as t:
+			t.add(file.Resize(self.vault, how_much, randomize))
+			lodev = t.add(loopdev.Open(self.vault))
+			cryptdev = t.add(crypt.Open(self.vault, lodev, password))
+			t.add(fs.Resize(cryptdev))
+			self.close(quiet=True)
 
-		# try:
-		# 	if curr_size == size:
-		# 		return
+	def shrink(self, how_much, password=None):
+		# 0) open without mounting
+		# 1) resize FS
+		# 2) close everything again
+		# 3) truncate file
 
-		# 	self.open(mount_dir, password=password)
-		# 	mount.Close(self.vault).run()
+		with Transaction() as t:
+			if self.is_mounted():
+				cryptdev = t.add(fs.Unmount(self.vault))
+			else:
+				lodev = t.add(loopdev.Open(self.vault))
+				cryptdev = t.add(crypt.Open(self.vault, lodev, password))
 
-		# 	if curr_size > size:
-		# 		file.Resize(self.vault,
-		# 			curr_size, size,
-		# 			randomize=randomize).run()
-		# 		crypt.Resize(self.vault)
-		# 		mount.Resize(self.vault, size).run()
-		# 		return
+			curr_size = fs.size(cryptdev)
+			size = curr_size - human_size(how_much)
+			if size < 0:
+				raise AssertionError("cannot shrink more than total size: {} > {}".format(
+					human_size(how_much),
+					curr_size))
 
-		# 	mount.Resize(self.vault, size).run()
-		# 	crypt.Close(self.vault)
-		# 	file.Resize(self.vault, curr_size, size).run()
-		# finally:
-		# 	self.close()
+			actual_resize = t.add(file.Resize(self.vault, size))
 
-	def _size(self):
-		return os.path.getsize(self.vault)
+			self.close(quiet=True)
+			t.add(file.Resize(self.vault, -(curr_size - actual_resize)))
 
 class Transaction(object):
 	def __enter__(self):
 		self._undos = []
 		return self
+
+	def _get_name(self, obj):
+		return "{}.{}".format(
+			obj.__module__,
+			obj.__class__.__name__)
 
 	def __exit__(self, exc_type, exc_val, exc_tb):
 		if exc_tb:
@@ -131,20 +144,25 @@ class Transaction(object):
 				try:
 					undoer.undo()
 				except Exception as e:
-					log.warn("undoing %s.%s failed: %s",
-						undoer.__module__,
-						undoer.__class__.__name__,
+					log.warn("undoing %s failed: %s",
+						self._get_name(undoer),
 						e)
 
 	def add(self, op):
-		ret = op.run()
+		start = time.monotonic()
+		try:
+			ret = op.run()
+		finally:
+			log.debug("add (took %fs): %s",
+				time.monotonic() - start,
+				self._get_name(op))
+
 		self._undos.insert(0, op)
 		return ret
 
-def noexcept(r):
+def noexcept(r, quiet=False):
 	try:
 		r.run()
 	except Exception as e:
-		log.warn("%s failed: %s",
-			r.__class__.__name__,
-			e)
+		if not quiet:
+			log.warn("%s failed: %s", r.__class__.__name__, e)

@@ -5,7 +5,7 @@ class Open(object):
 		self.file = file
 
 	def run(self):
-		return util.run("sudo", "losetup", "--show", "-f", self.file).strip()
+		return util.run("losetup", "--show", "-f", self.file).strip()
 
 	def undo(self):
 		Close(self.file).run()
@@ -15,13 +15,13 @@ class Close(object):
 		self.file = file
 
 	def run(self):
-		dev = find(self.file)
-		if not dev:
-			raise RuntimeError("%s does not have a loopdev" % self.file)
-		util.run("sudo", "losetup", "--detach", dev)
+		devs = find(self.file)
+		if not devs:
+			raise RuntimeError("{} does not have a loopdev".format(self.file))
+		util.run("losetup", "--detach", *devs.split("\n"))
 
 def find(file):
-	return util.run("sudo",
+	return util.run(
 		"losetup",
 		"-O", "NAME", "--noheadings",
 		"--associated", file).strip()

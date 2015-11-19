@@ -1,5 +1,6 @@
 import hashlib
 import os
+import time
 
 from . import util
 
@@ -17,11 +18,11 @@ class Format(object):
 		self.password = password
 
 	def run(self):
-		args = ["sudo",
+		args = [
 			"cryptsetup",
 			"--batch-mode",
 			"--verify-passphrase",
-			"--cipher", "aes-%s" % self.cipher_mode]
+			"--cipher", "aes-{}".format(self.cipher_mode)]
 
 		if self.hash:
 			args += ["--hash", self.hash]
@@ -56,7 +57,7 @@ class Open(object):
 		self.password = password
 
 	def run(self):
-		args = ["sudo",
+		args = [
 			"cryptsetup",
 			"--batch-mode"]
 
@@ -68,7 +69,12 @@ class Open(object):
 
 		util.run(*args, stdin=self.password)
 
-		return mapper(self.name)
+		# Wait for changes to be visible
+		name = mapper(self.name)
+		while not os.path.exists(name):
+			time.sleep(.1)
+
+		return name
 
 	def undo(self):
 		_close(self.name)
@@ -80,9 +86,12 @@ class Close(object):
 	def run(self):
 		_close(self.name)
 
+	def undo(self):
+		pass
+
 def is_luks(dev):
 	try:
-		util.run("sudo",
+		util.run(
 			"cryptsetup",
 			"isLuks", dev)
 		return True
@@ -90,14 +99,18 @@ def is_luks(dev):
 		return False
 
 def mapper(name):
-	return "/dev/mapper/%s" % name
+	return "/dev/mapper/{}".format(name).strip()
 
 def dev_name_for(file):
 	base = os.path.basename(file)
 	id = hashlib.md5(util.to_bytes(os.path.abspath(file))).hexdigest()
-	return "%s-%s" % (base, id)
+	return "{}-{}".format(base, id).strip()
 
 def _close(name):
-	util.run("sudo",
+	util.run(
 		"cryptsetup",
 		"close", name)
+
+	# Wait for changes to be visible
+	while os.path.exists(mapper(name)):
+		time.sleep(.1)

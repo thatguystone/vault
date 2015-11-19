@@ -1,43 +1,84 @@
+import glob
 import inspect
-import nose
+from nose.tools import *
 import os
 import os.path
+import random
 import shutil
 import unittest
 
-from . import vault
+from . import crypt, fs, loopdev, util, vault
 
-def setup_module():
-	shutil.rmtree("test_data/", ignore_errors=True)
-	os.mkdir("test_data/")
+class TestVault(unittest.TestCase):
+	_multiprocess_can_split_ = True
 
-def get_dir():
-	dir = os.path.join("test_data", inspect.stack()[2][3])
-	os.makedirs(dir, exist_ok=True)
-	return dir
+	VAULT = "vault_test.vlt"
+	PASS = "test"
+	DEFARGS = {
+		"kdf_iter_time_ms": 1,
+		"use_urandom": True,
+		"password": PASS,
+	}
 
-def get_vault():
-	return os.path.join(get_dir(), "vault.vlt")
+	def setUp(self):
+		# Cleanup after any failures from previous runs
+		vault.noexcept(fs.Unmount(self.path()), True)
+		vault.noexcept(crypt.Close(self.path()), True)
+		vault.noexcept(loopdev.Close(self.path()), True)
 
-def get_mount():
-	dir = os.path.join(get_dir(), "vault")
-	os.makedirs(dir, exist_ok=True)
-	return dir
+		shutil.rmtree(self.dir())
+		self.v = vault.Vault(self.path())
 
-def test_create_close():
-	v = vault.Vault(get_vault())
-	v.create(get_mount(), "10m",
-		kdf_iter_time_ms=1,
-		use_urandom=True,
-		password="test")
-	v.close()
+	def tearDown(self):
+		self.v.close()
 
-def test_resize():
-	v = vault.Vault(get_vault())
-	v.create(get_mount(), "10m",
-		kdf_iter_time_ms=1,
-		use_urandom=True,
-		password="test")
-	v.close()
+	def id(self):
+		id = super().id()
+		return "_".join(id.split('.')[-2:])
 
-	v.resize("20m")
+	def dir(self):
+		dir = os.path.join("test_data", self.id())
+		os.makedirs(dir, exist_ok=True)
+		return dir
+
+	def path(self):
+		return os.path.join(self.dir(), self.VAULT)
+
+	def mount(self):
+		dir = os.path.join(self.dir(), "vault")
+		os.makedirs(dir, exist_ok=True)
+		return dir
+
+	def create(self):
+		self.v.create(self.mount(), "10m", **self.DEFARGS)
+
+class TestBasic(TestVault):
+	def test_create_close(self):
+		self.create()
+		self.v.close()
+
+class TestGrow(TestVault):
+	def _grow(self, how_much, close=False):
+		rand = "{}".format(random.random())
+		path = os.path.join(self.mount(), "test_file")
+
+		with open(path, "x") as f:
+			f.write(rand)
+
+		if close:
+			self.v.close()
+
+		self.v.grow(how_much, password=self.PASS)
+		self.v.close()
+		self.v.open(self.mount(), password=self.PASS)
+
+		with open(path, "r") as f:
+			assert_equal(rand, f.read())
+
+	def test_closed(self):
+		self.create()
+		self._grow("10m", close=True)
+
+	def test_open(self):
+		self.create()
+		self._grow("10m")
