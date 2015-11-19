@@ -73,10 +73,10 @@ class Vault(object):
 			cryptdev = t.add(crypt.Open(self.vault, lodev, password))
 			t.add(fs.Mount(cryptdev, mount_dir))
 
-	def close(self, quiet=False):
-		noexcept(fs.Unmount(self.vault))
-		noexcept(crypt.Close(self.vault))
-		noexcept(loopdev.Close(self.vault))
+	def close(self, important=True):
+		noexcept(fs.Unmount(self.vault), important=important)
+		noexcept(crypt.Close(self.vault), important=important)
+		noexcept(loopdev.Close(self.vault), important=important)
 
 	def is_mounted(self):
 		opened = False
@@ -94,14 +94,14 @@ class Vault(object):
 		# 3) resize FS
 		# 4) close everything again so that next open works right
 
-		self.close(quiet=True)
+		self.close(important=False)
 
 		with Transaction() as t:
 			t.add(file.Resize(self.vault, how_much, randomize))
 			lodev = t.add(loopdev.Open(self.vault))
 			cryptdev = t.add(crypt.Open(self.vault, lodev, password))
 			t.add(fs.Resize(cryptdev))
-			self.close(quiet=True)
+			self.close(important=False)
 
 	def shrink(self, how_much, password=None):
 		# 0) open without mounting
@@ -125,7 +125,7 @@ class Vault(object):
 
 			actual_resize = t.add(fs.Resize(cryptdev, size))
 
-			self.close(quiet=True)
+			self.close(important=False)
 			t.add(file.Resize(self.vault, -(curr_size - actual_resize)))
 
 class Transaction(object):
@@ -160,8 +160,9 @@ class Transaction(object):
 		self._undos.insert(0, op)
 		return ret
 
-def noexcept(r):
+def noexcept(r, important=True):
 	try:
 		r.run()
 	except Exception as e:
-		log.warn("%s failed: %s", r.__class__.__name__, e)
+		l = log.warn if important else log.debug
+		l("%s failed: %s", r.__class__.__name__, e)

@@ -22,9 +22,9 @@ class TestVault(unittest.TestCase):
 
 	def setUp(self):
 		# Cleanup after any failures from previous runs
-		vault.noexcept(fs.Unmount(self.path()))
-		vault.noexcept(crypt.Close(self.path()))
-		vault.noexcept(loopdev.Close(self.path()))
+		vault.noexcept(fs.Unmount(self.path()), important=False)
+		vault.noexcept(crypt.Close(self.path()), important=False)
+		vault.noexcept(loopdev.Close(self.path()), important=False)
 
 		shutil.rmtree(self.dir())
 		self.v = vault.Vault(self.path())
