@@ -49,8 +49,10 @@ class TestVault(unittest.TestCase):
 		os.makedirs(dir, exist_ok=True)
 		return dir
 
-	def create(self):
-		self.v.create(self.mount(), "10m", **self.DEFARGS)
+	def create(self, randomize=True):
+		self.v.create(self.mount(), "10m",
+			randomize=randomize,
+			**self.DEFARGS)
 
 class TestBasic(TestVault):
 	def test_create_close(self):
@@ -58,7 +60,10 @@ class TestBasic(TestVault):
 		self.v.close()
 
 class TestResize(TestVault):
-	def _resize(self, how_much, fn, close=False):
+	def _resize(self,
+		how_much, fn, randomize=True,
+		close=False, shrink=False):
+
 		rand = "{}".format(random.random())
 		path = os.path.join(self.mount(), "test_file")
 
@@ -68,6 +73,12 @@ class TestResize(TestVault):
 		if close:
 			self.v.close()
 
+		size = os.path.getsize(self.path())
+		if shrink:
+			size -= util.human_size(how_much)
+		else:
+			size += util.human_size(how_much)
+
 		fn(how_much, password=self.PASS)
 		self.v.close()
 		self.v.open(self.mount(), password=self.PASS)
@@ -75,9 +86,13 @@ class TestResize(TestVault):
 		with open(path, "r") as f:
 			assert_equal(rand, f.read())
 
+		assert_equal(os.path.getsize(self.path()), size)
+
 class TestGrow(TestResize):
-	def _grow(self, how_much, close=False):
-		self._resize(how_much, self.v.grow, close)
+	def _grow(self, how_much, randomize=True, close=False):
+		self._resize(
+			how_much, self.v.grow,
+			randomize=True, close=close)
 
 	def test_closed(self):
 		self.create()
@@ -87,9 +102,17 @@ class TestGrow(TestResize):
 		self.create()
 		self._grow("10m")
 
+	def test_closed_no_randomize(self):
+		self.create(randomize=False)
+		self._grow("10m", randomize=False, close=True)
+
+	def test_open_no_randomize(self):
+		self.create(randomize=False)
+		self._grow("10m", randomize=False)
+
 class TestShrink(TestResize):
 	def _shrink(self, how_much, close=False):
-		self._resize(how_much, self.v.shrink, close)
+		self._resize(how_much, self.v.shrink, close, shrink=True)
 
 	def test_closed(self):
 		self.create()

@@ -66,7 +66,6 @@ class Resize(object):
 		self.size = None if not size else util.human_size(size)
 
 	def run(self):
-		# util.run("e2fsck", "-fy", self.dev)
 		args = [
 			"resize2fs",
 			self.dev]
