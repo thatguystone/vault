@@ -7,7 +7,7 @@ import random
 import shutil
 import unittest
 
-from .. import crypt, fs, loopdev, util, vault
+from .. import crypt, fs, loopdev, util, Vault, noexcept
 
 class TestVault(unittest.TestCase):
 	_multiprocess_can_split_ = True
@@ -15,19 +15,19 @@ class TestVault(unittest.TestCase):
 	VAULT = "vault_test.vlt"
 	PASS = "test"
 	DEFARGS = {
-		"kdf_iter_time_ms": 1,
+		"iter_time": 1,
 		"use_urandom": True,
 		"password": PASS,
 	}
 
 	def setUp(self):
 		# Cleanup after any failures from previous runs
-		vault.noexcept(fs.Unmount(self.path()), important=False)
-		vault.noexcept(crypt.Close(self.path()), important=False)
-		vault.noexcept(loopdev.Close(self.path()), important=False)
+		noexcept(fs.Unmount(self.path()), important=False)
+		noexcept(crypt.Close(self.path()), important=False)
+		noexcept(loopdev.Close(self.path()), important=False)
 
 		shutil.rmtree(self.dir())
-		self.v = vault.Vault(self.path())
+		self.v = Vault(self.path())
 
 	def tearDown(self):
 		self.v.close()
@@ -46,13 +46,15 @@ class TestVault(unittest.TestCase):
 
 	def mount(self):
 		dir = os.path.join(self.dir(), "vault")
-		os.makedirs(dir, exist_ok=True)
 		return dir
 
-	def create(self, randomize=True):
+	def create(self, randomize=True, **kwargs):
+		args = dict(**self.DEFARGS)
+		args.update(**kwargs)
+
 		self.v.create(self.mount(), "10m",
 			randomize=randomize,
-			**self.DEFARGS)
+			**args)
 
 class TestBasic(TestVault):
 	def test_create_close(self):
@@ -121,3 +123,11 @@ class TestShrink(TestResize):
 	def test_open(self):
 		self.create()
 		self._shrink("1m")
+
+class TestFailures(TestVault):
+	def test_crypt_args(self):
+		with assert_raises(RuntimeError):
+			self.create(cipher_mode="cbc", hash="blah")
+
+		# Should delete file on failure
+		assert not os.path.exists(self.path())

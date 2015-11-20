@@ -37,8 +37,6 @@ class Format(object):
 
 		if self.use_urandom:
 			args += ["--use-urandom"]
-		else:
-			args += ["--use-random"]
 
 		if self.password:
 			args += ["--key-file=-"]

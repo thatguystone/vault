@@ -21,6 +21,7 @@ class Mount(object):
 		self.mount_dir = mount_dir
 
 	def run(self):
+		os.makedirs(self.mount_dir, exist_ok=True)
 		util.run("mount", self.crypt_dev, self.mount_dir)
 
 	def undo(self):
@@ -66,6 +67,8 @@ class Resize(object):
 		self.size = None if not size else util.human_size(size)
 
 	def run(self):
+		util.run("e2fsck", "-fy", self.dev)
+
 		args = [
 			"resize2fs",
 			self.dev]
