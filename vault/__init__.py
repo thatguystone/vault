@@ -6,6 +6,8 @@ import time
 
 from . import crypt, file, fs, loopdev, util
 
+__all__ = ["Vault"]
+
 log = logging.getLogger(__name__)
 
 class Vault(object):
@@ -63,6 +65,16 @@ class Vault(object):
 			t.add(fs.Mount(cryptdev, mount_dir))
 
 	def open(self, mount_dir, password=None):
+		"""
+		Open a vault. If the vault appears to be open already, this does
+		nothing.
+
+		:param mount_dir: Where to mount the vault.
+
+		:param password: INSECURELY provide a password. This should only be
+		    used for testing.
+		"""
+
 		if self.is_mounted():
 			return
 
@@ -72,11 +84,21 @@ class Vault(object):
 			t.add(fs.Mount(cryptdev, mount_dir))
 
 	def close(self, important=True):
+		"""
+		Close a vault.
+
+		:param important: If failures should be logged as warnings.
+		"""
+
 		noexcept(fs.Unmount(self.vault), important=important)
 		noexcept(crypt.Close(self.vault), important=important)
 		noexcept(loopdev.Close(self.vault), important=important)
 
 	def is_mounted(self):
+		"""
+		Check if the given vault file is already open and mounted
+		"""
+
 		opened = False
 
 		dev = loopdev.find(self.vault)
@@ -86,6 +108,18 @@ class Vault(object):
 		return opened
 
 	def grow(self, how_much, randomize=True, password=None):
+		"""
+		Expand a vault. The vault may be open or closed; this will do the
+		right thing.
+
+		:param how_much: How much space to add to the vault.
+
+		:param randomize: If the new space should be randomized.
+
+		:param password: INSECURELY provide a password. This should only be
+		    used for testing.
+		"""
+
 		# 0) close everything
 		# 1) resize file
 		# 2) open without mounting
@@ -102,6 +136,16 @@ class Vault(object):
 			self.close(important=False)
 
 	def shrink(self, how_much, password=None):
+		"""
+		Shrink the vault. The vault may be open or closed; this will do the
+		right thing.
+
+		:param how_much: How much space to add to the vault.
+
+		:param password: INSECURELY provide a password. This should only be
+		    used for testing.
+		"""
+
 		# 0) open without mounting
 		# 1) resize FS
 		# 2) close everything again
