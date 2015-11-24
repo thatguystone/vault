@@ -40,14 +40,15 @@ def _proc_name(args):
 		return "<unknown>"
 	return args[0]
 
-def run(*args, stdin=None):
+def run(*args, stdin=None, cwd=None):
 	start = time.monotonic()
 	try:
 		p = subprocess.Popen(args,
 			stdin=sys.stdin if not stdin else subprocess.PIPE,
 			stdout=subprocess.PIPE,
 			stderr=subprocess.STDOUT,
-			close_fds=True)
+			close_fds=True,
+			cwd=cwd)
 		out = p.communicate(input=to_bytes(stdin))[0].decode("utf-8")
 	finally:
 		log.debug("exec (took %fs): %s", time.monotonic() - start, args)

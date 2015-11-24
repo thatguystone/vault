@@ -48,6 +48,9 @@ class TestVault(unittest.TestCase):
 		dir = os.path.join(self.dir(), "vault")
 		return dir
 
+	def open(self):
+		self.v.open(self.mount(), password=self.PASS)
+
 	def create(self, randomize=True, **kwargs):
 		args = dict(**self.DEFARGS)
 		args.update(**kwargs)
@@ -83,7 +86,7 @@ class TestResize(TestVault):
 
 		fn(how_much, password=self.PASS)
 		self.v.close()
-		self.v.open(self.mount(), password=self.PASS)
+		self.open()
 
 		with open(path, "r") as f:
 			assert_equal(rand, f.read())
@@ -131,3 +134,21 @@ class TestFailures(TestVault):
 
 		# Should delete file on failure
 		assert not os.path.exists(self.path())
+
+class TestCallbacks(TestVault):
+	def test_open_close(self):
+		self.create()
+
+		with open(os.path.join(self.mount(), "vault_open"), "w") as f:
+			os.chmod(f.name, 0o755)
+			f.write("#! /bin/bash\ntouch open_hit")
+
+		with open(os.path.join(self.mount(), "vault_close"), "w") as f:
+			os.chmod(f.name, 0o755)
+			f.write("#! /bin/bash\ntouch close_hit")
+
+		self.v.close()
+		self.open()
+
+		assert os.path.exists(os.path.join(self.mount(), "open_hit"))
+		assert os.path.exists(os.path.join(self.mount(), "close_hit"))

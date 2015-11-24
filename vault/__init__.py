@@ -10,6 +10,9 @@ __all__ = ["Vault"]
 
 log = logging.getLogger(__name__)
 
+VAULT_OPEN_SCRIPT = "./vault_open"
+VAULT_CLOSE_SCRIPT = "./vault_close"
+
 class Vault(object):
 	def __init__(self, vault):
 		self.vault = vault
@@ -83,12 +86,22 @@ class Vault(object):
 			cryptdev = t.add(crypt.Open(self.vault, lodev, password))
 			t.add(fs.Mount(cryptdev, mount_dir))
 
+		script = os.path.join(mount_dir, VAULT_OPEN_SCRIPT)
+		if os.path.exists(script):
+			print(util.run(VAULT_OPEN_SCRIPT, cwd=mount_dir), end="")
+
 	def close(self, important=True):
 		"""
 		Close a vault.
 
 		:param important: If failures should be logged as warnings.
 		"""
+
+		mount_dir = fs.get_mount_dir(self.vault)
+		if mount_dir:
+			script = os.path.join(mount_dir, VAULT_CLOSE_SCRIPT)
+			if os.path.exists(script):
+				print(util.run(VAULT_CLOSE_SCRIPT, cwd=mount_dir), end="")
 
 		noexcept(fs.Unmount(self.vault), important=important)
 		noexcept(crypt.Close(self.vault), important=important)

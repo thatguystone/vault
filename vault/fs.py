@@ -89,7 +89,7 @@ class Resize(object):
 def size(fs):
 	out = util.run("dumpe2fs", "-h", fs)
 	rows = csv.reader(
-		out.strip().split('\n')[1:],
+		out.strip().split("\n")[1:],
 		delimiter=":",
 		skipinitialspace=True)
 
@@ -99,9 +99,22 @@ def size(fs):
 
 	return int(md["block count"]) * int(md["block size"])
 
+def get_mount_dir(f):
+	m = _get_mounts()
+	dev = crypt.mapper(crypt.dev_name_for(f))
+	f = os.path.abspath(f).replace(' ', '\\040')
+
+	for l in m.split("\n"):
+		if f in l or dev in l:
+			return l.split(' ')[1].replace('\\040', ' ')
+
 def is_mounted(file):
 	cryptdev = crypt.mapper(crypt.dev_name_for(file))
 	return _is_dev_mounted(cryptdev)
 
 def _is_dev_mounted(cryptdev):
-	return cryptdev in open("/proc/self/mounts").read()
+	return cryptdev in _get_mounts()
+
+def _get_mounts():
+	with open("/proc/self/mounts") as f:
+		return f.read()
