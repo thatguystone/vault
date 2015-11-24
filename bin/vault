@@ -11,8 +11,14 @@ if os.getuid() != 0:
 	print("Error: {} must be run as root".format(sys.argv[0]))
 	sys.exit(1)
 
+def _mount_dir(arg, file):
+	if not arg:
+		arg = os.path.join("/mnt", os.path.basename(file))
+	return arg
+
 def open(args):
-	Vault(args.vault).open(args.mount_dir)
+	Vault(args.vault).open(
+		_mount_dir(args.mount_dir, args.vault))
 
 def close(args):
 	Vault(args.vault).close()
@@ -27,7 +33,8 @@ def create(args):
 			kwargs[arg] = attr
 
 	Vault(args.vault).create(
-		args.mount_dir, args.size,
+		_mount_dir(args.mount_dir, args.vault),
+		args.size,
 		**kwargs)
 
 def grow(args):
@@ -45,6 +52,7 @@ sub_open.add_argument("vault",
 	metavar="vault.vlt",
 	help="vault file to mount")
 sub_open.add_argument("mount_dir",
+	default=None, nargs="?",
 	help="where to mount the vault")
 
 sub_close = subs.add_parser("close", help="close a vault")
@@ -61,6 +69,7 @@ sub_create.add_argument("size",
 	help="how large the vault should be; may be a human unit "
 		"(eg. 15m, 1g, etc) or a byte value")
 sub_create.add_argument("mount_dir",
+	default=None, nargs="?",
 	help="where to mount the vault")
 sub_create.add_argument("--randomize",
 	action="store_true",

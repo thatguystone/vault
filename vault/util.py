@@ -1,4 +1,5 @@
 import logging
+import os
 import sys
 import subprocess
 import time
@@ -42,11 +43,15 @@ def _proc_name(args):
 def run(*args, stdin=None):
 	start = time.monotonic()
 	try:
+		env = os.environ.copy()
+		env["EXT2FS_NO_MTAB_OK"] = "OK"
+
 		p = subprocess.Popen(args,
 			stdin=sys.stdin if not stdin else subprocess.PIPE,
 			stdout=subprocess.PIPE,
 			stderr=subprocess.STDOUT,
-			close_fds=True)
+			close_fds=True,
+			env=env)
 		out = p.communicate(input=to_bytes(stdin))[0].decode("utf-8")
 	finally:
 		log.debug("exec (took %fs): %s", time.monotonic() - start, args)

@@ -1,0 +1,3 @@
+--sb-user=root
+--sb-user-keep-env
+--sb-env='{"SBUILD_CONFIG": ".sbuildrc"}'

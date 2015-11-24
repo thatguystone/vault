@@ -1,18 +1,33 @@
-Source: debs
+Source: vault
 Maintainer: Andrew Stone <a@stoney.io>
-Section: devel
+Section: utils
 Priority: optional
 Standards-Version: 3.9.6
-X-Python-Version: >= 3.4
+X-Python-Version: >= 2.8
+X-Python3-Version: >= 3.4
 Build-Depends:
+	cryptsetup,
 	debhelper (>= 9),
 	dh-exec,
-	dh-python | python-support,
-	python3,
+	dh-python,
+	python-all,
+	python3-all,
 	python3-coverage,
 	python3-nose,
+	python3-setuptools,
+	sudo,
 
-Package: debs
+Package: vault
+Architecture: any
+Depends:
+	${misc:Depends},
+	python3-vault (=${binary:Version}),
+Recommends:
+	bash-completion
+Description:
+	Securely store stuff
+
+Package: python3-vault
 Architecture: any
 Depends:
 	${misc:Depends},
@@ -20,7 +35,5 @@ Depends:
 	cryptsetup,
 Recommends:
 	bash-completion
-Description: For building your .debs
-	Automates building .deb files locally for a bunch of different
-	environments and pushing them to a remote repo with dput. Also has support
-	for managing sbuild environments.
+Description:
+	Securely store stuff

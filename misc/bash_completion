@@ -1,0 +1,60 @@
+_vault()
+{
+	local cur prev subcmd opts
+	COMPREPLY=()
+
+	cur=${COMP_WORDS[COMP_CWORD]}
+	prev=${COMP_WORDS[COMP_CWORD-1]}
+	subcmd=${COMP_WORDS[1]}
+	opts="-h --help"
+
+	case $subcmd in
+	open)
+		COMPREPLY=( $( compgen -W "$opts" -- "$cur" ) )
+		_filedir
+		;;
+	close)
+		COMPREPLY=( $( compgen -W "$opts" -- "$cur" ) )
+		_filedir
+		;;
+	create)
+		opts="$opts --randomize --fs-type --cipher-mode --hash \
+			--iter-time --use-urandom"
+
+		case $prev in
+			--fs-type)
+				COMPREPLY=( $( compgen -W "ext2 ext3 ext4" -- "$cur" ) )
+				;;
+			--cipher-mode)
+				opts="xts-plain64 cbc-essiv:sha256"
+				COMPREPLY=( $( compgen -W "$opts" -- "$cur" ) )
+				;;
+			--hash)
+				opts="sha1 sha256 sha512"
+				COMPREPLY=( $( compgen -W "$opts" -- "$cur" ) )
+				;;
+			--iter-time)
+				COMPREPLY=()
+				;;
+			*)
+				COMPREPLY=( $( compgen -W "$opts" -- "$cur" ) )
+				_filedir
+				;;
+		esac
+		;;
+	grow)
+		COMPREPLY=( $( compgen -W "$opts" -- "$cur" ) )
+		_filedir
+		;;
+	shrink)
+		COMPREPLY=( $( compgen -W "$opts" -- "$cur" ) )
+		_filedir
+		;;
+	*)
+		COMPREPLY=( $( compgen -W "open close create grow shrink" -- "$cur" ) )
+		;;
+	esac
+
+	return 0
+}
+complete -F _vault vault
