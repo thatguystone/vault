@@ -18,9 +18,10 @@ Build-Depends:
 	sudo,
 
 Package: vault
-Architecture: any
+Architecture: all
 Depends:
 	${misc:Depends},
+	${python3:Depends},
 	python3-vault (=${binary:Version}),
 Recommends:
 	bash-completion
@@ -28,7 +29,7 @@ Description:
 	Securely store stuff
 
 Package: python3-vault
-Architecture: any
+Architecture: all
 Depends:
 	${misc:Depends},
 	${python3:Depends},

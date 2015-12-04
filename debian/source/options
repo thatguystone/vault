@@ -1,0 +1,2 @@
+tar-ignore = test_data
+tar-ignore = .coverage
