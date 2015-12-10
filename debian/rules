@@ -8,7 +8,8 @@ override_dh_auto_clean:
 	py3clean .
 
 override_dh_auto_test:
-	sudo nosetests3
+	[ ! -f /etc/mtab ] && ln -sf /proc/mounts /etc/mtab
+	sudo -E nosetests3 -v
 
 override_dh_auto_build:
 	# a2x -v --format manpage man/vault.1.txt

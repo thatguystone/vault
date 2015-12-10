@@ -43,7 +43,11 @@ def grow(args):
 def shrink(args):
 	Vault(args.vault).shrink(args.how_much)
 
+def help(args):
+	parser.print_help()
+
 parser = argparse.ArgumentParser(prog="vault")
+parser.set_defaults(func=help)
 subs = parser.add_subparsers(help="command help")
 
 sub_open = subs.add_parser("open", help="open a vault")

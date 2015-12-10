@@ -3,6 +3,3 @@
 [sbuild]
 user = root
 user-keep-env = true
-
-[env]
-EXT2FS_NO_MTAB_OK = OK

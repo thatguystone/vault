@@ -1,6 +1,6 @@
 from nose.tools import *
 
-from .. import util
+from vault import util
 
 def test_human_size():
 	def check(tin, tout):

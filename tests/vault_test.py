@@ -7,8 +7,10 @@ import random
 import shutil
 import unittest
 
-from .. import crypt, fs, loopdev, util, Vault, noexcept
+from vault import crypt, fs, loopdev, util, Vault, noexcept
 
+@unittest.skipIf(os.getenv('SCHROOT_SESSION_ID'),
+	'these tests fail when running from a chrooted/unionfs env')
 class TestVault(unittest.TestCase):
 	_multiprocess_can_split_ = True
 
