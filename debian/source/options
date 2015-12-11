@@ -1,2 +1,4 @@
+tar-ignore
+diff-ignore
 tar-ignore = test_data
 tar-ignore = .coverage

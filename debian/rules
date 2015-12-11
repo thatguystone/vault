@@ -1,18 +1,23 @@
 #!/usr/bin/make -f
 
+MANPAGES = $(patsubst %.txt, %, $(wildcard man/*.txt))
+
 %:
-	dh $@ --with python3 --buildsystem=pybuild
+	dh $@ --with python3 --buildsystem=pybuild --parallel
 
 override_dh_auto_clean:
 	python3 setup.py clean
 	py3clean .
 
 override_dh_auto_test:
-	[ ! -f /etc/mtab ] && ln -sf /proc/mounts /etc/mtab
-	sudo -E nosetests3 -v
-
-override_dh_auto_build:
-	# a2x -v --format manpage man/vault.1.txt
+	# [ ! -f /etc/mtab ] && ln -sf /proc/mounts /etc/mtab
+	nosetests3 -v
 
 override_dh_auto_install:
 	python3 setup.py install --root=$(DESTDIR) --install-layout=deb
+
+override_dh_installman: $(MANPAGES)
+	dh_installman
+
+$(MANPAGES): % : %.txt
+	a2x -v --format manpage $<

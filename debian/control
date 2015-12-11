@@ -6,16 +6,20 @@ Standards-Version: 3.9.6
 X-Python-Version: >= 2.8
 X-Python3-Version: >= 3.4
 Build-Depends:
+	asciidoc,
 	cryptsetup,
 	debhelper (>= 9),
 	dh-exec,
 	dh-python,
+	docbook-utils,
+	libxml2-utils,
 	python-all,
 	python3-all,
 	python3-coverage,
 	python3-nose,
 	python3-setuptools,
 	sudo,
+	xmlto,
 
 Package: vault
 Architecture: all
@@ -25,8 +29,10 @@ Depends:
 	python3-vault (=${binary:Version}),
 Recommends:
 	bash-completion
-Description:
-	Securely store stuff
+Description: Securely store your stuff
+	Vault is like TrueCrypt: it creates a file-backed encrypted dev where you
+	can store all your files. This is just a thin wrapper around cryptsetup
+	with some niceness to make managing the vault easier.
 
 Package: python3-vault
 Architecture: all
@@ -34,7 +40,9 @@ Depends:
 	${misc:Depends},
 	${python3:Depends},
 	cryptsetup,
-Recommends:
-	bash-completion
-Description:
-	Securely store stuff
+Description: Python library interface for vault
+	Vault is like TrueCrypt: it creates a file-backed encrypted dev where you
+	can store all your files. This is just a thin wrapper around cryptsetup
+	with some niceness to make managing the vault easier.
+	.
+	This is the Python library that vault runs on top of.

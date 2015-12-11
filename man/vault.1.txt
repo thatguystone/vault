@@ -1,0 +1,43 @@
+VAULT(1)
+========
+:doctype: manpage
+
+
+NAME
+----
+vault - manage an encrypted, file-backed filesystem
+
+
+SYNOPSIS
+--------
+*vault*
+
+
+DESCRIPTION
+-----------
+Vault is like TrueCrypt: it creates a file-backed encrypted dev where you can
+store all your files. This is just a thin wrapper around cryptsetup with some
+niceness to make managing the vault easier.
+
+
+OPTIONS
+-------
+*-c, --config*::
+
+    Extra configuration files to load.
+
+AUTHOR
+------
+Andrew Stone <a@stoney.io>
+
+
+RESOURCES
+---------
+GitHub: <https://github.com/thatguystone/vault>
+
+
+COPYRIGHT
+---------
+Copyright © 2015 Andrew Stone <a@stoney.io>
+
+Distributed under the MIT license.
