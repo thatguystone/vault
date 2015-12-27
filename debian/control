@@ -11,7 +11,6 @@ Build-Depends:
 	debhelper (>= 9),
 	dh-exec,
 	dh-python,
-	docbook-utils,
 	libxml2-utils,
 	python-all,
 	python3-all,

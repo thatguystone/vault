@@ -19,12 +19,106 @@ Vault is like TrueCrypt: it creates a file-backed encrypted dev where you can
 store all your files. This is just a thin wrapper around cryptsetup with some
 niceness to make managing the vault easier.
 
+When dealing with sizes, you may use human-readable values such as "100m" or
+"100mb" for 100 megabytes, "10g" or "10gb" for 10 gigabytes, and so forth.
 
-OPTIONS
--------
-*-c, --config*::
+COMMANDS
+--------
 
-    Extra configuration files to load.
+*open*::
+
+	Open an existing vault.
+
+*close*::
+
+	Close an opened vault. Close path may either be vault device path or mount
+	path.
+
+*create*::
+
+	Create and open a new vault.
+
+	*--no-randomize*;;
+
+		If the vault file should not be randomized after creation. This is not
+		recommended.
+
+	*--fs-type*=ext4;;
+
+		Which filesystem to use
+
+	*--cipher-mode*=xts-plain64;;
+
+		Any cipher mode supported by cryptsetup, without the aes- prefix
+
+	*--hash*=sha1;;
+
+		Hash to use for PBKDF2 function
+
+	*--iter-time*=1000;;
+
+		How long to iterate on the password with PBKDF2, in milliseconds.
+
+	*--use-urandom*;;
+
+		Use /dev/urandom instead of cryptsetup's default; really only useful
+		for testing.
+
+*grow*::
+
+	Increase the size of the vault by the given amount.
+
+*shrink*::
+
+	Decrease the size of the vault by the given amount.
+
+
+EXAMPLES
+--------
+
+Create a new vault with all defaults::
+
+	sudo vault create secret.vlt 100m
+
+Create a new vault and mount it at a custom location::
+
+	sudo vault create secret.vlt 100m /mnt/secrets
+
+Create a new vault with a different filesystem::
+
+	sudo vault create --fs-type=ext2 secret.vlt 100m
+
+Create a new vault that isn't inited randomed (this is not recommended)::
+
+	sudo vault create --no-random secret.vlt 100m
+
+Open a vault::
+
+	sudo vault open secret.vlt
+
+Open a vault and mount it at a custom location::
+
+	sudo vault open secret.vlt /mnt/secrets
+
+Close a vault (from its file)::
+
+	sudo vault close secret.vlt
+
+Close a vault (from its device)::
+
+	sudo vault close /dev/mapper/vault-device
+
+Close a vault (from its mount location)::
+
+	sudo vault close /mnt/secrets
+
+Increase vault size by 100m::
+
+	sudo vault grow secrets.vlt 100m
+
+Shrink vault size by 100m::
+
+	sudo vault shrink secrets.vlt 100m
 
 AUTHOR
 ------
