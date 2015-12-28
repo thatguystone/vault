@@ -1,4 +1,4 @@
-# Vault [![Build Status](https://travis-ci.org/thatguystone/vault.svg)](https://travis-ci.org/thatguystone/vault)
+# Vault [![Build Status](https://travis-ci.org/thatguystone/vault.svg?branch=master)](https://travis-ci.org/thatguystone/vault)
 
 Vault is like TrueCrypt: it creates a file-backed encrypted dev where you can
 store all your files. This is just a thin wrapper around cryptsetup with some

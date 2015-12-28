@@ -21,7 +21,12 @@ class Close(object):
 		util.run("losetup", "--detach", *devs.split("\n"))
 
 def find(file):
-	return util.run(
+	out = util.run(
 		"losetup",
-		"-O", "NAME", "--noheadings",
 		"--associated", file).strip()
+	parts = out.split(":")
+
+	if parts and parts[0].startswith("/dev/"):
+		return parts[0]
+
+	return ""
