@@ -17,7 +17,6 @@ Build-Depends:
 	python3-coverage,
 	python3-nose,
 	python3-setuptools,
-	sudo,
 	xmlto,
 
 Package: vault
