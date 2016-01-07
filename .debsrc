@@ -1,6 +1,5 @@
 [debs]
 
 [sbuild]
-# Necessary if cryptsetup stuff starts working in the chroot
-# user = root
-# user-keep-env = true
+user = root
+user-keep-env = true

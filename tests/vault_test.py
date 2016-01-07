@@ -9,8 +9,8 @@ import unittest
 
 from vault import crypt, fs, loopdev, util, Vault, noexcept
 
-@unittest.skipIf(os.getenv('SCHROOT_SESSION_ID') or os.getenv('CI'),
-	'these tests fail when running from a chrooted/unionfs env')
+@unittest.skipIf(os.getenv('CI'),
+	'these tests fail when running on Travis')
 class TestVault(unittest.TestCase):
 	_multiprocess_can_split_ = True
 

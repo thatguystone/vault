@@ -10,7 +10,10 @@ override_dh_auto_clean:
 	py3clean .
 
 override_dh_auto_test:
-	# [ ! -f /etc/mtab ] && ln -sf /proc/mounts /etc/mtab
+	[ -n "$$SCHROOT_UID" ] && \
+		mount -t devtmpfs devtmpfs /dev && \
+		mount -t devpts devpts /dev/pts
+	[ ! -f /etc/mtab ] && ln -sf /proc/mounts /etc/mtab
 	nosetests3 -v
 
 override_dh_auto_install:
