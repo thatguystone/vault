@@ -96,7 +96,12 @@ def mapper(name):
 
 def dev_name_for(file):
 	base = os.path.basename(file)
-	id = hashlib.md5(util.to_bytes(os.path.abspath(file))).hexdigest()
+
+	# Follow any symlinked parents so that the final abspath is always the
+	# same
+	realabs = os.path.realpath(os.path.abspath(file))
+
+	id = hashlib.md5(util.to_bytes(realabs)).hexdigest()
 	return "{}-{}".format(base, id).strip()
 
 def _close(name):
